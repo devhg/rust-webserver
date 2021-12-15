@@ -22,16 +22,17 @@ impl<'a> Default for HttpResponse<'a> {
 }
 
 impl<'a> From<HttpResponse<'a>> for String {
-    fn from(resp: HttpResponse<'a>) -> Self {
+    fn from(resp: HttpResponse) -> Self {
         let res = resp.clone();
+        let body = &res.get_body();
         format!(
             "{} {} {}\r\n{}Content-Length: {}\r\n\r\n{}",
             &res.get_version(),
             &res.get_status_code(),
             &res.get_status_text(),
             &res.get_headers(),
-            &resp.body.unwrap().len(),
-            &res.get_body(),
+            body.len(),
+            body,
         )
     }
 }
@@ -69,7 +70,7 @@ impl<'a> HttpResponse<'a> {
     pub fn send_response(&self, stream: &mut impl Write) -> Result<(), ()> {
         let res = self.clone();
         let response_string = String::from(res);
-        write!(stream, "{}", response_string).unwrap();
+        let _ = write!(stream, "{}", response_string);
         Ok(())
     }
 
@@ -89,7 +90,7 @@ impl<'a> HttpResponse<'a> {
         let map = self.headers.clone().unwrap();
         let mut header_string: String = "".into();
         for (k, v) in map.iter() {
-            // ???
+            // todo ???
             header_string.push_str(format!("{}: {}\r\n", k, v).as_str());
         }
         header_string
